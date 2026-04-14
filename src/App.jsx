@@ -34,6 +34,26 @@ function Candle({ color = '#E8875A', floatDelay = '0s', scale = 1 }) {
   )
 }
 
+/* ── FAQ item ── */
+function FaqItem({ question, answer }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className={`faq-item${open ? ' faq-open' : ''}`}>
+      <button
+        className="faq-question"
+        onClick={() => setOpen(v => !v)}
+        aria-expanded={open}
+      >
+        <span>{question}</span>
+        <span className="faq-icon" aria-hidden="true">{open ? '−' : '+'}</span>
+      </button>
+      <div className="faq-answer" aria-hidden={!open}>
+        <p>{answer}</p>
+      </div>
+    </div>
+  )
+}
+
 /* ── Workshop card ── */
 function WorkshopCard({ title, date, duration, price, description, spots, accentColor }) {
   return (
@@ -121,6 +141,7 @@ export default function App() {
   const [aboutRef,      aboutInView]      = useInView(0.1)
   const [workshopsRef,  workshopsInView]  = useInView(0.05)
   const [shopRef,       shopInView]       = useInView(0.05)
+  const [faqRef,        faqInView]        = useInView(0.05)
   const [newsletterRef, newsletterInView] = useInView(0.1)
 
   useEffect(() => {
@@ -174,6 +195,33 @@ export default function App() {
     { name: 'Gezellig Thuis', price: '24,00', scent: 'Kaneel & Sinaasappel', bgColor: '#FBE9E7', emoji: '🏡', floatDelay: '1.0s' },
   ]
 
+  const faqs = [
+    {
+      question: 'Zijn jullie kaarsen geschikt voor mensen met gevoeligheid voor geuren?',
+      answer: 'Onze kaarsen zijn gemaakt van 100% soja was en bevatten geen synthetische parfums. We gebruiken uitsluitend zuivere etherische oliën. Bij ernstige geurovergevoeligheid raden we aan om eerst een kleine kaars te proberen of contact met ons op te nemen.',
+    },
+    {
+      question: 'Hoe lang brandt een Melty Studio kaars gemiddeld?',
+      answer: 'Onze standaard kaarsen (200 ml) branden gemiddeld 40–50 uur bij correct gebruik. Tip: laat de was de eerste keer volledig vloeibaar worden om een gelijkmatig oppervlak te behouden.',
+    },
+    {
+      question: 'Kan ik mijn eigen geur kiezen bij een workshop?',
+      answer: 'Ja! Tijdens onze workshops kun je kiezen uit meer dan 30 etherische oliën en geurblendes. Onze workshopleider helpt je de perfecte combinatie te maken voor jouw kaars.',
+    },
+    {
+      question: 'Verzenden jullie ook naar buiten Nederland?',
+      answer: 'We verzenden momenteel naar heel Nederland en België. Voor andere landen — stuur ons een berichtje via het contactformulier en we kijken wat er mogelijk is.',
+    },
+    {
+      question: 'Hoe snel ontvang ik mijn bestelling?',
+      answer: 'Bestellingen geplaatst vóór 14:00 op werkdagen worden dezelfde dag verzonden en zijn doorgaans binnen 1–3 werkdagen bij jou thuis.',
+    },
+    {
+      question: 'Zijn de workshops geschikt voor kinderen?',
+      answer: 'Onze workshops zijn bedoeld voor deelnemers van 16 jaar en ouder vanwege het werken met hete was. Voor verjaardagsfeestjes of speciale gelegenheden met jongeren kunnen we een aangepast programma aanbieden — neem contact op voor meer informatie.',
+    },
+  ]
+
   function handleNewsletterSubmit(e) {
     e.preventDefault()
     setEmailSent(true)
@@ -194,6 +242,7 @@ export default function App() {
           <a href="#about"     onClick={() => setMenuOpen(false)}>Over ons</a>
           <a href="#workshops" onClick={() => setMenuOpen(false)}>Workshops</a>
           <a href="#shop"      onClick={() => setMenuOpen(false)}>Shop</a>
+          <a href="#faq"       onClick={() => setMenuOpen(false)}>FAQ</a>
           <a href="#contact"   onClick={() => setMenuOpen(false)}>Contact</a>
           <a href="#shop" className="btn btn-nav" onClick={() => setMenuOpen(false)}>Winkel</a>
         </div>
@@ -347,6 +396,30 @@ export default function App() {
         </div>
       </section>
 
+      {/* ── Wave ── */}
+      <div className="wave-divider wave-cream" aria-hidden="true">
+        <svg viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,30 C480,60 960,0 1440,30 L1440,60 L0,60 Z" fill="#FFF8F0" />
+        </svg>
+      </div>
+
+      {/* ── FAQ ── */}
+      <section className="faq" id="faq">
+        <div className={`section-content${faqInView ? ' visible' : ''}`} ref={faqRef}>
+          <div className="section-header">
+            <span className="section-badge">FAQ</span>
+            <h2>Veelgestelde vragen</h2>
+            <p>Alles wat je wil weten over onze kaarsen, workshops en bezorging.</p>
+          </div>
+
+          <div className="faq-list">
+            {faqs.map((f, i) => (
+              <FaqItem key={i} question={f.question} answer={f.answer} />
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Newsletter ── */}
       <section className="newsletter" id="contact">
         <div className={`newsletter-content${newsletterInView ? ' visible' : ''}`} ref={newsletterRef}>
@@ -394,6 +467,7 @@ export default function App() {
             <a href="#about">Over ons</a>
             <a href="#workshops">Workshops</a>
             <a href="#shop">Shop</a>
+            <a href="#faq">FAQ</a>
             <a href="#contact">Contact</a>
           </div>
 
