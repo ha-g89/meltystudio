@@ -1122,6 +1122,14 @@
   font-weight: 500;
 }
 
+.footer-byline {
+  margin-top: 0.35rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  font-style: italic;
+}
+
 /* ============================
    FAQ
    ============================ */

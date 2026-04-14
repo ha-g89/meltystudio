@@ -488,6 +488,7 @@ export default function App() {
 
         <div className="footer-bottom">
           <p>© 2026 Melty Studio — Gemaakt met ♥ in Nederland</p>
+          <p className="footer-byline">Melty Studio by Nga Nguyen</p>
         </div>
       </footer>
     </div>
