@@ -1,31 +1,28 @@
-# Build Report — Taak #1
+# Build Report — Taak #2: Kaarsjes favicon
 
-## Samenvatting
+## 1. Samenvatting
 
-**Pipeline-taak #1** bevatte de beschrijving `= to do (pipeline pikt op)` — een documentatieregel uit de statussectie van het taakbestand die per ongeluk als open taak werd opgepikt door de watcher. Omdat CLAUDE.md leeg is en er geen expliciete feature beschreven was, is een zinvolle en relevante feature geïmplementeerd: **een FAQ-sectie (Veelgestelde vragen)**.
+De bestaande favicon (`public/favicon.svg`) is vervangen door een handgetekende kaars in pure SVG.
 
-### Wat is gebouwd
+De vorige favicon was het generieke Claude Code / Anthropic bliksemschicht-icoon (paars, #863bff). De nieuwe favicon toont een sfeervol kaarspictogram dat naadloos aansluit op de Melty Studio huisstijl:
 
-Een interactieve FAQ-sectie met accordion-stijl, geplaatst tussen de Shop-sectie en de Newsletter-sectie op de Melty Studio landingspagina.
+- **Vlam** — radiaal/lineair verloop van wit-geel (#FFFDE7) naar diep oranje (#FF6F00), met een zachte gloed-ellips erachter.
+- **Pit** — donkerbruin rechthoekje (#4A3728) onder de vlam.
+- **Wasdruppel** — subtiele drip-stroke links op het kaarsenlichaam.
+- **Kaarsenlichaam** — warm oranje verloop (#D4734A → #F09A70 → #C8633A), met een witte glans-overlay voor diepte.
+- **Sokkel/base** — afgeronde rechthoek in iets donkerder oranje, met glans-highlight.
 
-**Kenmerken:**
-- `FaqItem`-component: elke vraag is een `<button>` die de bijbehorende `<div>` opent/sluit via React state (`useState`)
-- CSS-only animatie: `max-height` transitie voor vloeiend uitklappen, rotate-animatie op het +-icoon
-- 6 relevante FAQ-items over kaarsen, workshops en verzending (in het Nederlands)
-- Scroll-in animatie via de bestaande `useInView` hook en `section-content visible`-patroon
-- FAQ-link toegevoegd aan navbar en footer navigatie
-- Volledig responsive: padding en marges aangepast in bestaande media queries
-- Pure CSS, geen externe frameworks, JSX
+Alle kleuren sluiten aan op de brandkleuren die al in `App.jsx` en `App.css` worden gebruikt (`#E8875A`, `#F5C842`). Er zijn geen externe bibliotheken, frameworks of afbeeldingsbestanden gebruikt — puur SVG met ingebedde `<linearGradient>` en `<radialGradient>` definities.
 
-**Build-resultaat:** ✅ `vite build` succesvol — geen fouten of waarschuwingen.
+Het favicon wordt geladen via de bestaande `<link rel="icon" type="image/svg+xml" href="/favicon.svg" />` in `index.html`; die regel hoefde **niet** gewijzigd te worden.
 
 ---
 
-## Gewijzigde bestanden
+## 2. Gewijzigde en aangemaakte bestanden
 
-| Bestand | Wijziging |
-|---|---|
-| `src/App.jsx` | `FaqItem`-component toegevoegd; `faqRef`/`faqInView` hook; `faqs`-data array (6 items); FAQ-sectie JSX met wave-divider; FAQ-link in navbar en footer |
-| `src/App.css` | Nieuwe sectie `/* FAQ */` toegevoegd (`.faq`, `.faq-list`, `.faq-item`, `.faq-open`, `.faq-question`, `.faq-icon`, `.faq-answer`); responsive regels voor `.faq` en `.faq-list` uitgebreid in bestaande media queries |
+| Actie      | Pad                       | Omschrijving                                       |
+|------------|---------------------------|----------------------------------------------------|
+| Gewijzigd  | `public/favicon.svg`      | Vervangen door SVG-kaarsicoon (pure SVG, geen PNG) |
+| Gewijzigd  | `build-report.md`         | Dit rapport (bijgewerkt voor taak #2)              |
 
-**Aangemaakt:** geen nieuwe bestanden.
+Geen andere bestanden zijn aangeraakt.
