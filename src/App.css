@@ -91,6 +91,7 @@
   font-size: 1.3rem;
 }
 
+
 @keyframes sway {
   0%, 100% { transform: rotate(-6deg); }
   50%       { transform: rotate(6deg); }
@@ -492,6 +493,7 @@
   width: 100%;
   height: 480px;
   object-fit: cover;
+  object-position: center 60%;
   display: block;
 }
 
