@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
+import meltyStudio1 from './assets/meltystudio1.jpeg'
 import './App.css'
 
 /* ── Scroll-in animation hook ── */
@@ -210,12 +211,8 @@ export default function App() {
       {/* ── Hero ── */}
       <section className="hero">
         <div className={`hero-content${heroInView ? ' visible' : ''}`} ref={heroRef}>
-          <div className="hero-candles" aria-hidden="true">
-            <Candle color="#FFAAA5" floatDelay="0s"    scale={0.75} />
-            <Candle color="#E8875A" floatDelay="0.4s"  scale={1.0}  />
-            <Candle color="#C8A2C8" floatDelay="0.8s"  scale={1.3}  />
-            <Candle color="#F5C842" floatDelay="0.2s"  scale={1.0}  />
-            <Candle color="#A8C5A0" floatDelay="0.6s"  scale={0.8}  />
+          <div className="hero-img-wrapper">
+            <img src={meltyStudio1} alt="Melty Studio handgemaakte kaarsen" className="hero-img" />
           </div>
 
           <div className="hero-text">
