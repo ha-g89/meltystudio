@@ -71,7 +71,7 @@ function Lightbox({ src, alt, onClose }) {
 
   return (
     <div className="lightbox-backdrop" onClick={onClose}>
-      <div className="lightbox-card" onClick={e => e.stopPropagation()}>
+      <div className="lightbox-card" onClick={onClose}>
         <img src={src} alt={alt} className="lightbox-img" />
         <button className="lightbox-close" onClick={onClose} aria-label="Sluiten">✕</button>
       </div>
