@@ -417,7 +417,7 @@ function Sparkles() {
   )
 }
 
-const heroPhotos = [meltyStudio9, meltyStudio10, meltyStudio14]
+const heroPhotos = [meltyStudio4, meltyStudio9, meltyStudio10]
 
 
 /* ════════════════════════════
@@ -613,18 +613,25 @@ export default function App() {
             </div>
           </div>
 
-          <div className="about-visual" aria-hidden="true">
-            <div className="about-bubble bubble-1">🕯️</div>
-            <div className="about-bubble bubble-2">🌸</div>
-            <div className="about-bubble bubble-3">✨</div>
-            <div className="about-bubble bubble-4">🌿</div>
-            <div className="about-main-img">
-              <div className="candle-display">
-                <Candle color="#E8875A" floatDelay="0s"   scale={1.4} />
-                <Candle color="#C8A2C8" floatDelay="0.6s" scale={1.9} />
-                <Candle color="#F5C842" floatDelay="1.2s" scale={1.2} />
-              </div>
+          <div className="about-visual">
+            {/* Decoratieve achtergrond blob */}
+            <div className="about-blob" />
+
+            {/* Achterste foto — gekanteld */}
+            <div className="about-photo about-photo-back">
+              <img src={meltyStudio3} alt="Melty Studio atelier" />
+              <span className="about-photo-label">✨ Met liefde gemaakt</span>
             </div>
+
+            {/* Voorste foto — recht */}
+            <div className="about-photo about-photo-front">
+              <img src={meltyStudio2} alt="Melty Studio kaarsen" />
+              <span className="about-photo-label">🕯️ Made with love by Nga Nguyen</span>
+            </div>
+
+            {/* Zwevende bubbels */}
+            <div className="about-bubble bubble-1">🌸</div>
+            <div className="about-bubble bubble-2">✨</div>
           </div>
         </div>
       </section>
