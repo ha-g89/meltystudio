@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="380" viewBox="0 0 512 380" fill="none">
+  <rect width="512" height="380" fill="transparent"/>
+
+  <!-- Ears -->
+  <circle cx="150" cy="110" r="54" fill="#D47200" stroke="#4A0A00" stroke-width="12"/>
+  <circle cx="150" cy="110" r="30" fill="#F5A31A"/>
+
+  <circle cx="362" cy="110" r="54" fill="#D47200" stroke="#4A0A00" stroke-width="12"/>
+  <circle cx="362" cy="110" r="30" fill="#F5A31A"/>
+
+  <!-- Head: much flatter oval -->
+  <ellipse cx="256" cy="220" rx="142" ry="102" fill="#D47200" stroke="#4A0A00" stroke-width="12"/>
+
+  <!-- Snout -->
+  <rect x="198" y="190" width="116" height="78" rx="36" fill="#F5A31A"/>
+
+  <!-- Eyes -->
+  <circle cx="176" cy="220" r="15" fill="#4A0A00"/>
+  <circle cx="336" cy="220" r="15" fill="#4A0A00"/>
+
+  <!-- Nose -->
+  <rect x="239" y="201" width="34" height="24" rx="12" fill="#4A0A00"/>
+
+  <!-- Mouth -->
+  <path d="M256 224 C256 237 244 243 232 238 C223 234 222 228 226 223"
+        stroke="#4A0A00" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M256 224 C256 237 268 243 280 238 C289 234 290 228 286 223"
+        stroke="#4A0A00" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>
