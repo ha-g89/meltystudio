@@ -688,7 +688,7 @@ export default function App() {
               Wil je meer van Melty Studio zien? Kom gezellig langs!
             </p>
             <a
-              href="https://www.instagram.com"
+              href="https://www.instagram.com/meltystudio.nl/"
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-instagram"
@@ -810,7 +810,7 @@ export default function App() {
 
           <div className="footer-col">
             <span className="footer-col-title">Volg ons</span>
-            <a href="#">Instagram</a>
+            <a href="https://www.instagram.com/meltystudio.nl/" target="_blank" rel="noopener noreferrer">Instagram</a>
             <a href="#">Pinterest</a>
             <a href="#">Facebook</a>
           </div>
