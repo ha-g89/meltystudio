@@ -1120,26 +1120,39 @@
 
 /* Achterste foto */
 .about-photo-back {
-  transform: rotate(-6deg) translate(-40px, 20px);
+  transform: rotate(-7deg) translate(-65px, 20px);
   z-index: 1;
   animation: photo-float-back 4.5s ease-in-out infinite;
 }
 
 @keyframes photo-float-back {
-  0%, 100% { transform: rotate(-6deg) translate(-40px, 20px); }
-  50%       { transform: rotate(-6deg) translate(-40px, 8px); }
+  0%, 100% { transform: rotate(-7deg) translate(-65px, 20px); }
+  50%       { transform: rotate(-7deg) translate(-65px, 8px); }
+}
+
+/* Middelste foto */
+.about-photo-mid {
+  transform: rotate(1deg) translate(0px, 0px);
+  z-index: 2;
+  animation: photo-float-mid 5s ease-in-out infinite;
+  animation-delay: 0.8s;
+}
+
+@keyframes photo-float-mid {
+  0%, 100% { transform: rotate(1deg) translate(0px, 0px); }
+  50%       { transform: rotate(1deg) translate(0px, -12px); }
 }
 
 /* Voorste foto */
 .about-photo-front {
-  transform: rotate(4deg) translate(40px, -20px);
-  z-index: 2;
+  transform: rotate(6deg) translate(65px, -15px);
+  z-index: 3;
   animation: photo-float 4s ease-in-out infinite;
 }
 
 @keyframes photo-float {
-  0%, 100% { transform: rotate(4deg) translate(40px, -20px); }
-  50%       { transform: rotate(4deg) translate(40px, -32px); }
+  0%, 100% { transform: rotate(6deg) translate(65px, -15px); }
+  50%       { transform: rotate(6deg) translate(65px, -27px); }
 }
 
 

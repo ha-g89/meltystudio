@@ -417,7 +417,7 @@ function Sparkles() {
   )
 }
 
-const heroPhotos = [meltyStudio4, meltyStudio9, meltyStudio10]
+const heroPhotos = [meltyStudio9, meltyStudio10, meltyStudio14]
 
 
 /* ════════════════════════════
@@ -617,13 +617,19 @@ export default function App() {
             {/* Decoratieve achtergrond blob */}
             <div className="about-blob" />
 
-            {/* Achterste foto — gekanteld */}
+            {/* Achterste foto — gekanteld links */}
             <div className="about-photo about-photo-back">
               <img src={meltyStudio3} alt="Melty Studio atelier" />
               <span className="about-photo-label">✨ Met liefde gemaakt</span>
             </div>
 
-            {/* Voorste foto — recht */}
+            {/* Middelste foto */}
+            <div className="about-photo about-photo-mid">
+              <img src={meltyStudio4} alt="Melty Studio kaars" />
+              <span className="about-photo-label">🌸 Handgemaakt</span>
+            </div>
+
+            {/* Voorste foto — gekanteld rechts */}
             <div className="about-photo about-photo-front">
               <img src={meltyStudio2} alt="Melty Studio kaarsen" />
               <span className="about-photo-label">🕯️ Made with love by Nga Nguyen</span>
