@@ -365,6 +365,8 @@ function Sparkles() {
   )
 }
 
+const heroPhotos = [meltyStudio9, meltyStudio10, meltyStudio14]
+
 /* ════════════════════════════
    Main App
    ════════════════════════════ */
@@ -372,6 +374,7 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
+  const [heroIndex, setHeroIndex] = useState(0)
 
   const [heroRef,       heroInView]       = useInView(0.05)
   const [aboutRef,      aboutInView]      = useInView(0.1)
@@ -386,6 +389,13 @@ export default function App() {
     const onScroll = () => setScrolled(window.scrollY > 60)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setHeroIndex(i => (i + 1) % heroPhotos.length)
+    }, 10000)
+    return () => clearInterval(timer)
   }, [])
 
   useEffect(() => {
@@ -499,7 +509,14 @@ export default function App() {
       <section className="hero">
         <div className={`hero-content${heroInView ? ' visible' : ''}`} ref={heroRef}>
           <div className="hero-img-wrapper">
-            <img src={meltyStudio1} alt="Melty Studio handgemaakte kaarsen" className="hero-img" />
+            {heroPhotos.map((src, i) => (
+              <img
+                key={i}
+                src={src}
+                alt="Melty Studio handgemaakte kaarsen"
+                className={`hero-img${i === heroIndex ? ' hero-img-active' : ''}`}
+              />
+            ))}
           </div>
 
           <div className="hero-text">

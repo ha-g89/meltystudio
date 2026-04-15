@@ -512,6 +512,8 @@
   overflow: hidden;
   box-shadow: 0 24px 64px rgba(61, 43, 31, 0.18);
   animation: img-float 5s ease-in-out infinite;
+  aspect-ratio: 3 / 4;
+  max-height: 520px;
 }
 
 .hero-img-wrapper::after {
@@ -521,15 +523,25 @@
   border-radius: 28px;
   box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.25);
   pointer-events: none;
+  z-index: 1;
 }
 
 .hero-img {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: 480px;
+  height: 100%;
   object-fit: cover;
   object-position: center 60%;
   display: block;
+  opacity: 0;
+  transition: opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
+
+.hero-img-active {
+  opacity: 1;
+}
+
 
 @keyframes img-float {
   0%, 100% { transform: translateY(0px) rotate(-0.5deg); }
