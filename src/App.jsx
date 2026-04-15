@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import kawaiiBeár from './assets/kawaii_bear_face_oval.svg'
 import meltyStudio1  from './assets/meltystudio1.jpeg'
 import meltyStudio2  from './assets/meltystudio2.jpeg'
 import meltyStudio3  from './assets/meltystudio3.jpeg'
@@ -53,6 +54,57 @@ function Candle({ color = '#E8875A', floatDelay = '0s', scale = 1 }) {
         </div>
         <div className="candle-base" />
       </div>
+    </div>
+  )
+}
+
+/* ── Hero Photo Stack ── */
+function HeroStack({ photos }) {
+  const [active, setActive] = useState(0)
+  const n = photos.length
+
+  useEffect(() => {
+    const timer = setInterval(() => setActive(a => (a + 1) % n), 10000)
+    return () => clearInterval(timer)
+  }, [n])
+
+  return (
+    <div className="hero-stack">
+      {photos.map((src, i) => {
+        const pos = (i - active + n) % n
+        return (
+          <div key={i} className={`stack-card stack-pos-${pos}`}>
+            <img src={src} alt={`Melty Studio foto ${i + 1}`} className="stack-img" />
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/* ── Scroll Bear ── */
+function ScrollBear() {
+  const [progress, setProgress] = useState(0)
+
+  useEffect(() => {
+    const onScroll = () => {
+      const scrolled = window.scrollY
+      const total = document.documentElement.scrollHeight - window.innerHeight
+      setProgress(total > 0 ? scrolled / total : 0)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  /* Bear walks from 5% to 90% down the screen */
+  const top = 5 + progress * 85
+
+  return (
+    <div className="scroll-bear" style={{ top: `${top}vh` }} aria-hidden="true">
+      <div className="bear-body">
+        <img src={kawaiiBeár} alt="" className="bear-icon" />
+      </div>
+      <div className="bear-trail" style={{ height: `${top}vh` }} />
     </div>
   )
 }
@@ -367,6 +419,7 @@ function Sparkles() {
 
 const heroPhotos = [meltyStudio9, meltyStudio10, meltyStudio14]
 
+
 /* ════════════════════════════
    Main App
    ════════════════════════════ */
@@ -374,7 +427,6 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
-  const [heroIndex, setHeroIndex] = useState(0)
 
   const [heroRef,       heroInView]       = useInView(0.05)
   const [aboutRef,      aboutInView]      = useInView(0.1)
@@ -391,12 +443,6 @@ export default function App() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setHeroIndex(i => (i + 1) % heroPhotos.length)
-    }, 10000)
-    return () => clearInterval(timer)
-  }, [])
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : ''
@@ -477,6 +523,7 @@ export default function App() {
   return (
     <div className="app">
       <Sparkles />
+      <ScrollBear />
 
       {/* ── Navbar ── */}
       <nav className={`navbar${scrolled ? ' scrolled' : ''}`} role="navigation" aria-label="Hoofdnavigatie">
@@ -508,16 +555,7 @@ export default function App() {
       {/* ── Hero ── */}
       <section className="hero">
         <div className={`hero-content${heroInView ? ' visible' : ''}`} ref={heroRef}>
-          <div className="hero-img-wrapper">
-            {heroPhotos.map((src, i) => (
-              <img
-                key={i}
-                src={src}
-                alt="Melty Studio handgemaakte kaarsen"
-                className={`hero-img${i === heroIndex ? ' hero-img-active' : ''}`}
-              />
-            ))}
-          </div>
+          <HeroStack photos={heroPhotos} />
 
           <div className="hero-text">
             <span className="hero-badge">✨ Handgemaakt met liefde</span>

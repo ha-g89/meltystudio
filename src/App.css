@@ -22,6 +22,53 @@
 }
 
 /* ============================
+   Scroll Bear
+   ============================ */
+.scroll-bear {
+  position: fixed;
+  right: 18px;
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  transition: top 0.15s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bear-body {
+  filter: drop-shadow(0 2px 6px rgba(61, 43, 31, 0.2));
+  animation: bear-walk 0.5s ease-in-out infinite alternate;
+  transform-origin: bottom center;
+}
+
+.bear-icon {
+  width: 44px;
+  height: 44px;
+  display: block;
+}
+
+@keyframes bear-walk {
+  0%   { transform: rotate(-6deg) translateY(0px); }
+  50%  { transform: rotate(0deg)  translateY(-3px); }
+  100% { transform: rotate(6deg)  translateY(0px); }
+}
+
+.bear-trail {
+  width: 3px;
+  background: linear-gradient(to bottom, rgba(232,135,90,0.5), rgba(245,200,66,0.2));
+  border-radius: 3px;
+  position: fixed;
+  right: 26px;
+  top: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 480px) {
+  .scroll-bear { right: 8px; }
+  .bear-icon   { width: 34px; height: 34px; }
+}
+
+/* ============================
    Sparkles (fixed background)
    ============================ */
 .sparkles {
@@ -425,7 +472,7 @@
   transform: translateY(0);
 }
 
-.hero-content.visible .hero-img-wrapper {
+.hero-content.visible .hero-stack {
   animation: fade-up 1s 0.1s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -506,40 +553,58 @@
   margin-top: 0.4rem;
 }
 
-.hero-img-wrapper {
+/* ── Hero photo stack ── */
+.hero-stack {
   position: relative;
-  border-radius: 28px;
-  overflow: hidden;
-  box-shadow: 0 24px 64px rgba(61, 43, 31, 0.18);
-  animation: img-float 5s ease-in-out infinite;
   aspect-ratio: 3 / 4;
   max-height: 520px;
+  width: 100%;
+  animation: img-float 5s ease-in-out infinite;
 }
 
-.hero-img-wrapper::after {
-  content: '';
+.stack-card {
   position: absolute;
   inset: 0;
-  border-radius: 28px;
-  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.25);
-  pointer-events: none;
+  border-radius: 24px;
+  overflow: hidden;
+  transition:
+    transform 0.9s cubic-bezier(0.34, 1.2, 0.64, 1),
+    box-shadow 0.9s ease,
+    opacity 0.9s ease;
+  will-change: transform;
+}
+
+/* Voorste foto — recht, volledig zichtbaar */
+.stack-pos-0 {
+  transform: rotate(0deg) translate(0px, 0px) scale(1);
+  z-index: 3;
+  box-shadow: 0 24px 64px rgba(61, 43, 31, 0.22);
+  opacity: 1;
+}
+
+/* Middelste foto — licht naar links gekanteld */
+.stack-pos-1 {
+  transform: rotate(-4.5deg) translate(-16px, 12px) scale(0.96);
+  z-index: 2;
+  box-shadow: 0 14px 44px rgba(61, 43, 31, 0.14);
+  opacity: 0.92;
+}
+
+/* Achterste foto — licht naar rechts gekanteld */
+.stack-pos-2 {
+  transform: rotate(4deg) translate(12px, 20px) scale(0.92);
   z-index: 1;
+  box-shadow: 0 8px 28px rgba(61, 43, 31, 0.09);
+  opacity: 0.82;
 }
 
-.hero-img {
-  position: absolute;
-  inset: 0;
+.stack-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center 60%;
   display: block;
-  opacity: 0;
-  transition: opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.hero-img-active {
-  opacity: 1;
+  pointer-events: none;
 }
 
 
