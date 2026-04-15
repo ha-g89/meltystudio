@@ -187,6 +187,16 @@ function PhotoGallery({ photos }) {
     }
   }, [onMouseMove, onMouseUp])
 
+  /* Centre first card on mount */
+  useEffect(() => {
+    const track = trackRef.current
+    if (!track) return
+    const first = track.children[0]
+    if (!first) return
+    const targetScroll = first.offsetLeft - (track.clientWidth - first.offsetWidth) / 2
+    track.scrollLeft = targetScroll
+  }, [photos])
+
   /* Update current dot indicator on scroll */
   useEffect(() => {
     const track = trackRef.current
