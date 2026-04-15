@@ -1,6 +1,29 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
-import meltyStudio1 from './assets/meltystudio1.jpeg'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import meltyStudio1  from './assets/meltystudio1.jpeg'
+import meltyStudio2  from './assets/meltystudio2.jpeg'
+import meltyStudio3  from './assets/meltystudio3.jpeg'
+import meltyStudio4  from './assets/meltystudio4.jpeg'
+import meltyStudio6  from './assets/meltystudio6.jpeg'
+import meltyStudio7  from './assets/meltystudio7.jpeg'
+import meltyStudio8  from './assets/meltystudio8.jpeg'
+import meltyStudio9  from './assets/meltystudio9.jpeg'
+import meltyStudio10 from './assets/meltystudio10.jpeg'
+import meltyStudio11 from './assets/meltystudio11.jpeg'
+import meltyStudio12 from './assets/meltystudio12.jpeg'
+import meltyStudio13 from './assets/meltystudio13.jpeg'
+import meltyStudio14 from './assets/meltystudio14.jpeg'
+import meltyStudio15 from './assets/meltystudio15.jpeg'
+import meltyStudio16 from './assets/meltystudio16.jpeg'
+import video1 from './assets/meltystudio1video.mp4'
+import video2 from './assets/meltystudio2video.mp4'
 import './App.css'
+
+const galleryPhotos = [
+  meltyStudio1, meltyStudio2, meltyStudio3, meltyStudio4,
+  meltyStudio6, meltyStudio7, meltyStudio8,
+  meltyStudio9, meltyStudio10, meltyStudio11, meltyStudio12,
+  meltyStudio13, meltyStudio14, meltyStudio15, meltyStudio16,
+]
 
 /* ── Scroll-in animation hook ── */
 function useInView(threshold = 0.15) {
@@ -30,6 +53,214 @@ function Candle({ color = '#E8875A', floatDelay = '0s', scale = 1 }) {
         </div>
         <div className="candle-base" />
       </div>
+    </div>
+  )
+}
+
+/* ── Lightbox ── */
+function Lightbox({ src, alt, onClose }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
+  }, [onClose])
+
+  return (
+    <div className="lightbox-backdrop" onClick={onClose}>
+      <div className="lightbox-card" onClick={e => e.stopPropagation()}>
+        <img src={src} alt={alt} className="lightbox-img" />
+        <button className="lightbox-close" onClick={onClose} aria-label="Sluiten">✕</button>
+      </div>
+    </div>
+  )
+}
+
+/* ── Photo Gallery (horizontal scroll + mouse drag + momentum) ── */
+function PhotoGallery({ photos }) {
+  const trackRef   = useRef(null)
+  const [current, setCurrent] = useState(0)
+  const [lightbox, setLightbox] = useState(null)
+
+  const isDragging = useRef(false)
+  const didDrag    = useRef(false)
+  const startX     = useRef(0)
+  const startScroll= useRef(0)
+  const lastX      = useRef(0)
+  const velocity   = useRef(0)
+  const rafRef     = useRef(null)
+
+  /* Snap to the nearest card after drag/momentum */
+  const snapToNearest = useCallback(() => {
+    const track = trackRef.current
+    if (!track) return
+    const cards = Array.from(track.children)
+    const trackCenter = track.scrollLeft + track.clientWidth / 2
+    let closest = 0
+    let minDist = Infinity
+    cards.forEach((card, i) => {
+      const cardCenter = card.offsetLeft + card.offsetWidth / 2
+      const dist = Math.abs(trackCenter - cardCenter)
+      if (dist < minDist) { minDist = dist; closest = i }
+    })
+    setCurrent(closest)
+    const target = cards[closest]
+    const targetScroll = target.offsetLeft - (track.clientWidth - target.offsetWidth) / 2
+    track.scrollTo({ left: targetScroll, behavior: 'smooth' })
+  }, [])
+
+  /* Momentum glide after release */
+  const applyMomentum = useCallback(() => {
+    const track = trackRef.current
+    if (!track) return
+    velocity.current *= 0.88           // friction
+    track.scrollLeft -= velocity.current
+    if (Math.abs(velocity.current) > 0.8) {
+      rafRef.current = requestAnimationFrame(applyMomentum)
+    } else {
+      snapToNearest()
+    }
+  }, [snapToNearest])
+
+  const scrollTo = useCallback((idx) => {
+    const track = trackRef.current
+    if (!track) return
+    const cards = Array.from(track.children)
+    const target = cards[idx]
+    if (!target) return
+    const targetScroll = target.offsetLeft - (track.clientWidth - target.offsetWidth) / 2
+    track.scrollTo({ left: targetScroll, behavior: 'smooth' })
+    setCurrent(idx)
+  }, [])
+
+  const prev = () => scrollTo(Math.max(current - 1, 0))
+  const next = () => scrollTo(Math.min(current + 1, photos.length - 1))
+
+  const onMouseDown = useCallback((e) => {
+    const track = trackRef.current
+    if (!track) return
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    isDragging.current  = true
+    didDrag.current     = false
+    startX.current      = e.pageX
+    startScroll.current = track.scrollLeft
+    lastX.current       = e.pageX
+    velocity.current    = 0
+    track.style.cursor  = 'grabbing'
+    e.preventDefault()
+  }, [])
+
+  const onMouseMove = useCallback((e) => {
+    if (!isDragging.current) return
+    const track = trackRef.current
+    if (!track) return
+    const dx = e.pageX - startX.current
+    if (Math.abs(dx) > 4) didDrag.current = true
+    velocity.current    = e.pageX - lastX.current
+    lastX.current       = e.pageX
+    track.scrollLeft    = startScroll.current - dx
+  }, [])
+
+  const onMouseUp = useCallback(() => {
+    if (!isDragging.current) return
+    isDragging.current = false
+    const track = trackRef.current
+    if (!track) return
+    track.style.cursor = 'grab'
+    if (Math.abs(velocity.current) > 2) {
+      rafRef.current = requestAnimationFrame(applyMomentum)
+    } else {
+      snapToNearest()
+    }
+  }, [applyMomentum, snapToNearest])
+
+  useEffect(() => {
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup',   onMouseUp)
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup',   onMouseUp)
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    }
+  }, [onMouseMove, onMouseUp])
+
+  /* Update current dot indicator on scroll */
+  useEffect(() => {
+    const track = trackRef.current
+    if (!track) return
+    const onScroll = () => {
+      const cards = Array.from(track.children)
+      const trackCenter = track.scrollLeft + track.clientWidth / 2
+      let closest = 0, minDist = Infinity
+      cards.forEach((card, i) => {
+        const dist = Math.abs(card.offsetLeft + card.offsetWidth / 2 - trackCenter)
+        if (dist < minDist) { minDist = dist; closest = i }
+      })
+      setCurrent(closest)
+    }
+    track.addEventListener('scroll', onScroll, { passive: true })
+    return () => track.removeEventListener('scroll', onScroll)
+  }, [photos])
+
+  return (
+    <div className="pg-wrapper">
+      <div
+        className="pg-track"
+        ref={trackRef}
+        onMouseDown={onMouseDown}
+      >
+        {photos.map((src, i) => (
+          <div
+            key={i}
+            className={`pg-card${i === current ? ' pg-active' : ''}`}
+            onClick={() => {
+              if (didDrag.current) return
+              if (i === current) setLightbox({ src, alt: `Melty Studio foto ${i + 1}` })
+              else scrollTo(i)
+            }}
+          >
+            <img src={src} alt={`Melty Studio foto ${i + 1}`} className="pg-img" />
+          </div>
+        ))}
+      </div>
+
+      {/* Arrows */}
+      <button
+        className="pg-arrow pg-prev"
+        onClick={prev}
+        disabled={current === 0}
+        aria-label="Vorige foto"
+      >‹</button>
+      <button
+        className="pg-arrow pg-next"
+        onClick={next}
+        disabled={current === photos.length - 1}
+        aria-label="Volgende foto"
+      >›</button>
+
+      {/* Dots */}
+      <div className="pg-dots">
+        {photos.map((_, i) => (
+          <button
+            key={i}
+            className={`pg-dot${i === current ? ' active' : ''}`}
+            onClick={() => scrollTo(i)}
+            aria-label={`Ga naar foto ${i + 1}`}
+          />
+        ))}
+      </div>
+
+      {/* Lightbox */}
+      {lightbox && (
+        <Lightbox
+          src={lightbox.src}
+          alt={lightbox.alt}
+          onClose={() => setLightbox(null)}
+        />
+      )}
     </div>
   )
 }
@@ -99,7 +330,7 @@ function ProductCard({ name, price, scent, bgColor, emoji, floatDelay = '0s' }) 
   )
 }
 
-/* ── Sparkles (memoised so positions don't shift on re-render) ── */
+/* ── Sparkles ── */
 function Sparkles() {
   const items = useMemo(() =>
     Array.from({ length: 22 }, (_, i) => ({
@@ -114,16 +345,11 @@ function Sparkles() {
   return (
     <div className="sparkles" aria-hidden="true">
       {items.map(s => (
-        <div
-          key={s.id}
-          className="sparkle"
-          style={{
-            left: s.left,
-            top: s.top,
-            animationDelay: s.delay,
-            animationDuration: s.duration,
-          }}
-        />
+        <div key={s.id} className="sparkle" style={{
+          left: s.left, top: s.top,
+          animationDelay: s.delay,
+          animationDuration: s.duration,
+        }} />
       ))}
     </div>
   )
@@ -139,7 +365,9 @@ export default function App() {
 
   const [heroRef,       heroInView]       = useInView(0.05)
   const [aboutRef,      aboutInView]      = useInView(0.1)
+  const [galleryRef,    galleryInView]    = useInView(0.05)
   const [workshopsRef,  workshopsInView]  = useInView(0.05)
+  const [videoRef,      videoInView]      = useInView(0.05)
   const [shopRef,       shopInView]       = useInView(0.05)
   const [faqRef,        faqInView]        = useInView(0.05)
   const [newsletterRef, newsletterInView] = useInView(0.1)
@@ -150,7 +378,6 @@ export default function App() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  /* Lock body scroll when mobile menu is open */
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
@@ -240,6 +467,7 @@ export default function App() {
 
         <div className={`nav-links${menuOpen ? ' open' : ''}`}>
           <a href="#about"     onClick={() => setMenuOpen(false)}>Over ons</a>
+          <a href="#gallery"   onClick={() => setMenuOpen(false)}>Galerij</a>
           <a href="#workshops" onClick={() => setMenuOpen(false)}>Workshops</a>
           <a href="#shop"      onClick={() => setMenuOpen(false)}>Shop</a>
           <a href="#faq"       onClick={() => setMenuOpen(false)}>FAQ</a>
@@ -343,16 +571,32 @@ export default function App() {
         </svg>
       </div>
 
+      {/* ── Gallery ── */}
+      <section className="gallery" id="gallery">
+        <div className={`section-content${galleryInView ? ' visible' : ''}`} ref={galleryRef}>
+          <div className="section-header">
+            <span className="section-badge">Galerij</span>
+            <h2>Een kijkje in ons atelier</h2>
+            <p>Van gieten tot glinsteren — dit is hoe onze kaarsen tot leven komen.</p>
+          </div>
+          <PhotoGallery photos={galleryPhotos} />
+        </div>
+      </section>
+
+      {/* ── Wave ── */}
+      <div className="wave-divider wave-cream" aria-hidden="true">
+        <svg viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,30 C480,0 960,60 1440,30 L1440,60 L0,60 Z" fill="#FFF8F0" />
+        </svg>
+      </div>
+
       {/* ── Workshops ── */}
       <section className="workshops" id="workshops">
         <div className={`section-content${workshopsInView ? ' visible' : ''}`} ref={workshopsRef}>
           <div className="section-header">
             <span className="section-badge">Workshops</span>
             <h2>Maak je eigen kaarsjes</h2>
-            <p>
-              Kom een middag creatief zijn in ons gezellige atelier.
-              Voor beginners én gevorderden!
-            </p>
+            <p>Kom een middag creatief zijn in ons gezellige atelier. Voor beginners én gevorderden!</p>
           </div>
 
           <div className="workshops-grid">
@@ -368,10 +612,45 @@ export default function App() {
         </div>
       </section>
 
+      {/* ── Video section ── */}
+      <section className="video-section" id="video">
+        <div className={`section-content${videoInView ? ' visible' : ''}`} ref={videoRef}>
+          <div className="section-header">
+            <span className="section-badge">Instagram</span>
+            <h2>Volg ons op Instagram</h2>
+            <p>
+              Bekijk onze laatste posts, sfeerbeelden en verhalen op Instagram.
+              Wil je meer van Melty Studio zien? Kom gezellig langs!
+            </p>
+            <a
+              href="https://www.instagram.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-instagram"
+            >
+              <span className="instagram-icon" aria-hidden="true">📸</span>
+              Volg @meltystudio.nl
+            </a>
+          </div>
+          <div className="video-grid">
+            <div className="video-card">
+              <video controls playsInline preload="metadata" muted className="video-player">
+                <source src={video1} type="video/mp4" />
+              </video>
+            </div>
+            <div className="video-card">
+              <video controls playsInline preload="metadata" muted className="video-player">
+                <source src={video2} type="video/mp4" />
+              </video>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── Wave ── */}
-      <div className="wave-divider wave-cream" aria-hidden="true">
+      <div className="wave-divider wave-peach" aria-hidden="true">
         <svg viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0,30 C480,0 960,60 1440,30 L1440,60 L0,60 Z" fill="#FFF8F0" />
+          <path d="M0,30 C480,60 960,0 1440,30 L1440,60 L0,60 Z" fill="#FFF0E8" />
         </svg>
       </div>
 
@@ -426,8 +705,7 @@ export default function App() {
           <span className="newsletter-emoji" aria-hidden="true">💌</span>
           <h2>Blijf op de hoogte</h2>
           <p className="newsletter-sub">
-            Ontvang als eerste nieuws over nieuwe geuren, workshops en
-            exclusieve aanbiedingen.
+            Ontvang als eerste nieuws over nieuwe geuren, workshops en exclusieve aanbiedingen.
           </p>
 
           {emailSent ? (
@@ -436,15 +714,8 @@ export default function App() {
             </p>
           ) : (
             <form className="newsletter-form" onSubmit={handleNewsletterSubmit}>
-              <input
-                type="email"
-                placeholder="jouw@email.nl"
-                required
-                aria-label="E-mailadres"
-              />
-              <button type="submit" className="newsletter-submit">
-                Aanmelden ✨
-              </button>
+              <input type="email" placeholder="jouw@email.nl" required aria-label="E-mailadres" />
+              <button type="submit" className="newsletter-submit">Aanmelden ✨</button>
             </form>
           )}
 
@@ -465,6 +736,7 @@ export default function App() {
           <div className="footer-col">
             <span className="footer-col-title">Navigatie</span>
             <a href="#about">Over ons</a>
+            <a href="#gallery">Galerij</a>
             <a href="#workshops">Workshops</a>
             <a href="#shop">Shop</a>
             <a href="#faq">FAQ</a>
@@ -488,7 +760,6 @@ export default function App() {
 
         <div className="footer-bottom">
           <p>© 2026 Melty Studio — Gemaakt met ♥ in Nederland</p>
-          <p className="footer-byline">Melty Studio by Nga Nguyen</p>
         </div>
       </footer>
     </div>
