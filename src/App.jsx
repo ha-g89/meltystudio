@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import kawaiiBeár from './assets/kawaii_bear_face_oval.svg'
+import logoMelty from './assets/logoMelty.png'
 import meltyStudio1  from './assets/meltystudio1.jpeg'
 import meltyStudio2  from './assets/meltystudio2.jpeg'
 import meltyStudio3  from './assets/meltystudio3.jpeg'
@@ -15,15 +17,19 @@ import meltyStudio13 from './assets/meltystudio13.jpeg'
 import meltyStudio14 from './assets/meltystudio14.jpeg'
 import meltyStudio15 from './assets/meltystudio15.jpeg'
 import meltyStudio16 from './assets/meltystudio16.jpeg'
-import video1 from './assets/meltystudio1video.mp4'
-import video2 from './assets/meltystudio2video.mp4'
+import meltyStudio17 from './assets/meltystudio17.jpeg'
+import meltyStudio18 from './assets/meltystudio18.jpeg'
+import meltyStudio19 from './assets/meltystudio19.jpeg'
+import meltyStudio20 from './assets/meltystudio20.jpeg'
+import studioGif from './assets/meltystudio2video.gif'
 import './App.css'
 
 const galleryPhotos = [
-  meltyStudio1, meltyStudio2, meltyStudio3, meltyStudio4,
-  meltyStudio6, meltyStudio7, meltyStudio8,
-  meltyStudio9, meltyStudio10, meltyStudio11, meltyStudio12,
-  meltyStudio13, meltyStudio14, meltyStudio15, meltyStudio16,
+  meltyStudio1, meltyStudio4, meltyStudio7, meltyStudio8,
+  meltyStudio9, meltyStudio10, meltyStudio11,
+  meltyStudio14, meltyStudio15, meltyStudio16,
+  meltyStudio17, meltyStudio18, meltyStudio19,
+  meltyStudio6, meltyStudio3,
 ]
 
 /* ── Scroll-in animation hook ── */
@@ -58,29 +64,6 @@ function Candle({ color = '#E8875A', floatDelay = '0s', scale = 1 }) {
   )
 }
 
-/* ── Hero Photo Stack ── */
-function HeroStack({ photos }) {
-  const [active, setActive] = useState(0)
-  const n = photos.length
-
-  useEffect(() => {
-    const timer = setInterval(() => setActive(a => (a + 1) % n), 10000)
-    return () => clearInterval(timer)
-  }, [n])
-
-  return (
-    <div className="hero-stack">
-      {photos.map((src, i) => {
-        const pos = (i - active + n) % n
-        return (
-          <div key={i} className={`stack-card stack-pos-${pos}`}>
-            <img src={src} alt={`Melty Studio foto ${i + 1}`} className="stack-img" />
-          </div>
-        )
-      })}
-    </div>
-  )
-}
 
 /* ── Scroll Bear ── */
 function ScrollBear() {
@@ -109,217 +92,111 @@ function ScrollBear() {
   )
 }
 
-/* ── Lightbox ── */
-function Lightbox({ src, alt, onClose }) {
+/* ── Gallery lightbox: morphs from the clicked photo's own position to fullscreen ── */
+function GalleryLightbox({ src, alt, originRect, onClose }) {
+  const [phase, setPhase] = useState('start') // start -> open -> closing
+  const closeTimer = useRef(null)
+
   useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    const raf = requestAnimationFrame(() => setPhase('open'))
+    const onKey = (e) => { if (e.key === 'Escape') handleClose() }
     window.addEventListener('keydown', onKey)
     document.body.style.overflow = 'hidden'
     return () => {
+      cancelAnimationFrame(raf)
       window.removeEventListener('keydown', onKey)
       document.body.style.overflow = ''
+      clearTimeout(closeTimer.current)
     }
-  }, [onClose])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-  return (
-    <div className="lightbox-backdrop" onClick={onClose}>
-      <div className="lightbox-card" onClick={onClose}>
-        <img src={src} alt={alt} className="lightbox-img" />
-        <button className="lightbox-close" onClick={onClose} aria-label="Sluiten">✕</button>
+  function handleClose() {
+    setPhase('closing')
+    closeTimer.current = setTimeout(onClose, 380)
+  }
+
+  let targetH = Math.min(window.innerHeight * 0.85, 700)
+  let targetW = targetH * 0.75
+  if (targetW > window.innerWidth * 0.9) {
+    targetW = window.innerWidth * 0.9
+    targetH = targetW / 0.75
+  }
+  const targetTop = (window.innerHeight - targetH) / 2
+  const targetLeft = (window.innerWidth - targetW) / 2
+
+  const frameStyle = phase === 'start'
+    ? {
+        top: originRect.top,
+        left: originRect.left,
+        width: originRect.width,
+        height: originRect.height,
+        borderRadius: '50%',
+        opacity: 1,
+      }
+    : {
+        top: targetTop,
+        left: targetLeft,
+        width: targetW,
+        height: targetH,
+        borderRadius: '20px',
+        opacity: phase === 'closing' ? 0 : 1,
+        transform: phase === 'closing' ? 'scale(0.9)' : 'scale(1)',
+      }
+
+  return createPortal(
+    <div className={`gallery-lightbox-backdrop${phase === 'open' ? ' visible' : ''}`} onClick={handleClose}>
+      <div className="gallery-lightbox-frame" style={frameStyle} onClick={(e) => e.stopPropagation()}>
+        <img src={src} alt={alt} />
       </div>
-    </div>
+      <button className="lightbox-close" onClick={handleClose} aria-label="Sluiten">✕</button>
+    </div>,
+    document.body
   )
 }
 
-/* ── Photo Gallery (horizontal scroll + mouse drag + momentum) ── */
-function PhotoGallery({ photos }) {
-  const trackRef   = useRef(null)
-  const [current, setCurrent] = useState(0)
+/* ── Round photo gallery ── */
+const INITIAL_COUNT = 8
+
+function PhotoGrid({ photos }) {
+  const [showAll, setShowAll] = useState(false)
   const [lightbox, setLightbox] = useState(null)
 
-  const isDragging = useRef(false)
-  const didDrag    = useRef(false)
-  const startX     = useRef(0)
-  const startScroll= useRef(0)
-  const lastX      = useRef(0)
-  const velocity   = useRef(0)
-  const rafRef     = useRef(null)
-
-  /* Snap to the nearest card after drag/momentum */
-  const snapToNearest = useCallback(() => {
-    const track = trackRef.current
-    if (!track) return
-    const cards = Array.from(track.children)
-    const trackCenter = track.scrollLeft + track.clientWidth / 2
-    let closest = 0
-    let minDist = Infinity
-    cards.forEach((card, i) => {
-      const cardCenter = card.offsetLeft + card.offsetWidth / 2
-      const dist = Math.abs(trackCenter - cardCenter)
-      if (dist < minDist) { minDist = dist; closest = i }
-    })
-    setCurrent(closest)
-    const target = cards[closest]
-    const targetScroll = target.offsetLeft - (track.clientWidth - target.offsetWidth) / 2
-    track.scrollTo({ left: targetScroll, behavior: 'smooth' })
-  }, [])
-
-  /* Momentum glide after release */
-  const applyMomentum = useCallback(() => {
-    const track = trackRef.current
-    if (!track) return
-    velocity.current *= 0.88           // friction
-    track.scrollLeft -= velocity.current
-    if (Math.abs(velocity.current) > 0.8) {
-      rafRef.current = requestAnimationFrame(applyMomentum)
-    } else {
-      snapToNearest()
-    }
-  }, [snapToNearest])
-
-  const scrollTo = useCallback((idx) => {
-    const track = trackRef.current
-    if (!track) return
-    const cards = Array.from(track.children)
-    const target = cards[idx]
-    if (!target) return
-    const targetScroll = target.offsetLeft - (track.clientWidth - target.offsetWidth) / 2
-    track.scrollTo({ left: targetScroll, behavior: 'smooth' })
-    setCurrent(idx)
-  }, [])
-
-  const prev = () => scrollTo(Math.max(current - 1, 0))
-  const next = () => scrollTo(Math.min(current + 1, photos.length - 1))
-
-  const onMouseDown = useCallback((e) => {
-    const track = trackRef.current
-    if (!track) return
-    if (rafRef.current) cancelAnimationFrame(rafRef.current)
-    isDragging.current  = true
-    didDrag.current     = false
-    startX.current      = e.pageX
-    startScroll.current = track.scrollLeft
-    lastX.current       = e.pageX
-    velocity.current    = 0
-    track.style.cursor  = 'grabbing'
-    e.preventDefault()
-  }, [])
-
-  const onMouseMove = useCallback((e) => {
-    if (!isDragging.current) return
-    const track = trackRef.current
-    if (!track) return
-    const dx = e.pageX - startX.current
-    if (Math.abs(dx) > 4) didDrag.current = true
-    velocity.current    = e.pageX - lastX.current
-    lastX.current       = e.pageX
-    track.scrollLeft    = startScroll.current - dx
-  }, [])
-
-  const onMouseUp = useCallback(() => {
-    if (!isDragging.current) return
-    isDragging.current = false
-    const track = trackRef.current
-    if (!track) return
-    track.style.cursor = 'grab'
-    if (Math.abs(velocity.current) > 2) {
-      rafRef.current = requestAnimationFrame(applyMomentum)
-    } else {
-      snapToNearest()
-    }
-  }, [applyMomentum, snapToNearest])
-
-  useEffect(() => {
-    window.addEventListener('mousemove', onMouseMove)
-    window.addEventListener('mouseup',   onMouseUp)
-    return () => {
-      window.removeEventListener('mousemove', onMouseMove)
-      window.removeEventListener('mouseup',   onMouseUp)
-      if (rafRef.current) cancelAnimationFrame(rafRef.current)
-    }
-  }, [onMouseMove, onMouseUp])
-
-  /* Centre first card on mount */
-  useEffect(() => {
-    const track = trackRef.current
-    if (!track) return
-    const first = track.children[0]
-    if (!first) return
-    const targetScroll = first.offsetLeft - (track.clientWidth - first.offsetWidth) / 2
-    track.scrollLeft = targetScroll
-  }, [photos])
-
-  /* Update current dot indicator on scroll */
-  useEffect(() => {
-    const track = trackRef.current
-    if (!track) return
-    const onScroll = () => {
-      const cards = Array.from(track.children)
-      const trackCenter = track.scrollLeft + track.clientWidth / 2
-      let closest = 0, minDist = Infinity
-      cards.forEach((card, i) => {
-        const dist = Math.abs(card.offsetLeft + card.offsetWidth / 2 - trackCenter)
-        if (dist < minDist) { minDist = dist; closest = i }
-      })
-      setCurrent(closest)
-    }
-    track.addEventListener('scroll', onScroll, { passive: true })
-    return () => track.removeEventListener('scroll', onScroll)
-  }, [photos])
+  function openPhoto(e, src, alt) {
+    setLightbox({ src, alt, originRect: e.currentTarget.getBoundingClientRect() })
+  }
 
   return (
-    <div className="pg-wrapper">
-      <div
-        className="pg-track"
-        ref={trackRef}
-        onMouseDown={onMouseDown}
-      >
-        {photos.map((src, i) => (
-          <div
-            key={i}
-            className={`pg-card${i === current ? ' pg-active' : ''}`}
-            onClick={() => {
-              if (didDrag.current) return
-              if (i === current) setLightbox({ src, alt: `Melty Studio foto ${i + 1}` })
-              else scrollTo(i)
-            }}
-          >
-            <img src={src} alt={`Melty Studio foto ${i + 1}`} className="pg-img" />
-          </div>
-        ))}
+    <div className="pol-gallery">
+      <div className="pol-grid">
+        {photos.map((src, i) => {
+          const isExtra = i >= INITIAL_COUNT
+          return (
+            <div
+              key={i}
+              className={`pol-card${isExtra && !showAll ? ' pol-hidden' : ''}${isExtra && showAll ? ' pol-extra' : ''}`}
+              style={{ '--delay': `${(i - INITIAL_COUNT) * 0.07}s` }}
+              onClick={(e) => openPhoto(e, src, `Melty Studio foto ${i + 1}`)}
+            >
+              <img src={src} alt={`Melty Studio foto ${i + 1}`} />
+            </div>
+          )
+        })}
       </div>
 
-      {/* Arrows */}
-      <button
-        className="pg-arrow pg-prev"
-        onClick={prev}
-        disabled={current === 0}
-        aria-label="Vorige foto"
-      >‹</button>
-      <button
-        className="pg-arrow pg-next"
-        onClick={next}
-        disabled={current === photos.length - 1}
-        aria-label="Volgende foto"
-      >›</button>
+      {!showAll && photos.length > INITIAL_COUNT && (
+        <div className="pol-loadmore">
+          <button className="btn btn-outline" onClick={() => setShowAll(true)}>
+            Meer foto's laden ↓
+          </button>
+        </div>
+      )}
 
-      {/* Dots */}
-      <div className="pg-dots">
-        {photos.map((_, i) => (
-          <button
-            key={i}
-            className={`pg-dot${i === current ? ' active' : ''}`}
-            onClick={() => scrollTo(i)}
-            aria-label={`Ga naar foto ${i + 1}`}
-          />
-        ))}
-      </div>
-
-      {/* Lightbox */}
       {lightbox && (
-        <Lightbox
+        <GalleryLightbox
           src={lightbox.src}
           alt={lightbox.alt}
+          originRect={lightbox.originRect}
           onClose={() => setLightbox(null)}
         />
       )}
@@ -417,7 +294,6 @@ function Sparkles() {
   )
 }
 
-const heroPhotos = [meltyStudio9, meltyStudio10, meltyStudio14]
 
 
 /* ════════════════════════════
@@ -528,8 +404,7 @@ export default function App() {
       {/* ── Navbar ── */}
       <nav className={`navbar${scrolled ? ' scrolled' : ''}`} role="navigation" aria-label="Hoofdnavigatie">
         <div className="nav-brand" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          <span className="nav-flame" aria-hidden="true">🕯️</span>
-          <span>Melty Studio</span>
+          <img src={logoMelty} alt="Melty Studio" className="nav-logo" />
         </div>
 
         <div className={`nav-links${menuOpen ? ' open' : ''}`}>
@@ -555,9 +430,13 @@ export default function App() {
       {/* ── Hero ── */}
       <section className="hero">
         <div className={`hero-content${heroInView ? ' visible' : ''}`} ref={heroRef}>
-          <HeroStack photos={heroPhotos} />
+          <div className="hero-photo-side hero-photo-left">
+            <div className="hero-photo-frame">
+              <img src={meltyStudio1} alt="Melty Studio kaars — verjaardagstaart met kawaii kuiken" />
+            </div>
+          </div>
 
-          <div className="hero-text">
+          <div className="hero-text-center">
             <span className="hero-badge">✨ Handgemaakt met liefde</span>
             <h1>
               Verlicht jouw wereld met{' '}
@@ -571,12 +450,37 @@ export default function App() {
               <a href="#shop"      className="btn btn-primary">Ontdek de shop</a>
               <a href="#workshops" className="btn btn-secondary">Workshops bekijken</a>
             </div>
+
+            <div className="hero-features">
+              <div className="hero-feature">
+                <span className="hero-feature-icon">🌿</span>
+                <span>100% soja was</span>
+              </div>
+              <div className="hero-feature">
+                <span className="hero-feature-icon">🐻</span>
+                <span>Kawaii ontwerp</span>
+              </div>
+              <div className="hero-feature">
+                <span className="hero-feature-icon">🎁</span>
+                <span>Cadeau-klaar</span>
+              </div>
+              <div className="hero-feature">
+                <span className="hero-feature-icon">🕯️</span>
+                <span>Handgemaakt</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="hero-photo-side hero-photo-right">
+            <div className="hero-photo-frame">
+              <img src={meltyStudio20} alt="Melty Studio beertjes-kaarsjes in glazen potjes" />
+            </div>
           </div>
         </div>
 
         <div className="hero-wave" aria-hidden="true">
-          <svg viewBox="0 0 1440 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" fill="#FFF8F0" />
+          <svg viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,100 a60,60 0 0 1 120,0 a60,60 0 0 1 120,0 a60,60 0 0 1 120,0 a60,60 0 0 1 120,0 a60,60 0 0 1 120,0 a60,60 0 0 1 120,0 a60,60 0 0 1 120,0 a60,60 0 0 1 120,0 a60,60 0 0 1 120,0 a60,60 0 0 1 120,0 a60,60 0 0 1 120,0 a60,60 0 0 1 120,0 L1440,120 L0,120 Z" fill="#FFF8F0" />
           </svg>
         </div>
       </section>
@@ -590,26 +494,18 @@ export default function App() {
             <p>
               Bij Melty Studio geloven we dat een goed brandende kaars een kamer
               kan transformeren. Elk kaarsje wordt met de hand gegoten van 100%
-              soja was, verrijkt met de mooiste etherische oliën en botanische
-              ingrediënten.
-            </p>
-            <p>
+              soja was.
+              <br /><br />
               Ons atelier bruist van creativiteit — en die creativiteit delen we
               graag met jou tijdens onze gezellige, kleine workshops.
             </p>
-            <div className="about-stats">
-              <div className="stat">
-                <span className="stat-num">500+</span>
-                <span>blije klanten</span>
+            <div className="about-highlight">
+              <span className="about-highlight-icon" aria-hidden="true">🌿</span>
+              <div className="about-highlight-text">
+                <span className="about-highlight-num">100%</span>
+                <span className="about-highlight-label">Soja was</span>
               </div>
-              <div className="stat">
-                <span className="stat-num">30+</span>
-                <span>geuren</span>
-              </div>
-              <div className="stat">
-                <span className="stat-num">100%</span>
-                <span>soja was</span>
-              </div>
+              <span className="about-highlight-icon" aria-hidden="true">🌿</span>
             </div>
           </div>
 
@@ -617,21 +513,21 @@ export default function App() {
             {/* Decoratieve achtergrond blob */}
             <div className="about-blob" />
 
-            {/* Achterste foto — gekanteld links */}
-            <div className="about-photo about-photo-back">
-              <img src={meltyStudio3} alt="Melty Studio atelier" />
-              <span className="about-photo-label">✨ Met liefde gemaakt</span>
+            {/* Verste achterste foto */}
+            <div className="about-photo about-photo-far-back">
+              <img src={meltyStudio4} alt="Melty Studio atelier" />
+              <span className="about-photo-label">🌿 Ambachtelijk</span>
             </div>
 
             {/* Middelste foto */}
             <div className="about-photo about-photo-mid">
-              <img src={meltyStudio4} alt="Melty Studio kaars" />
+              <img src={meltyStudio9} alt="Melty Studio kaars" />
               <span className="about-photo-label">🌸 Handgemaakt</span>
             </div>
 
             {/* Voorste foto — gekanteld rechts */}
             <div className="about-photo about-photo-front">
-              <img src={meltyStudio2} alt="Melty Studio kaarsen" />
+              <img src={studioGif} alt="Melty Studio in actie" />
               <span className="about-photo-label">🕯️ Made with love by Nga Nguyen</span>
             </div>
 
@@ -657,7 +553,7 @@ export default function App() {
             <h2>Een kijkje in ons atelier</h2>
             <p>Van gieten tot glinsteren — dit is hoe onze kaarsen tot leven komen.</p>
           </div>
-          <PhotoGallery photos={galleryPhotos} />
+          <PhotoGrid photos={galleryPhotos} />
         </div>
       </section>
 
@@ -709,18 +605,6 @@ export default function App() {
               <span className="instagram-icon" aria-hidden="true">📸</span>
               Volg @meltystudio.nl
             </a>
-          </div>
-          <div className="video-grid">
-            <div className="video-card">
-              <video controls playsInline preload="metadata" muted className="video-player">
-                <source src={video1} type="video/mp4" />
-              </video>
-            </div>
-            <div className="video-card">
-              <video controls playsInline preload="metadata" muted className="video-player">
-                <source src={video2} type="video/mp4" />
-              </video>
-            </div>
           </div>
         </div>
       </section>
@@ -805,9 +689,7 @@ export default function App() {
       <footer className="footer">
         <div className="footer-content">
           <div className="footer-brand">
-            <div className="footer-brand-name">
-              <span aria-hidden="true">🕯️</span> Melty Studio
-            </div>
+            <img src={logoMelty} alt="Melty Studio — handmade candles" className="footer-logo" />
             <p>Handgemaakte kaarsen vol liefde, gemaakt in ons eigen atelier.</p>
           </div>
 
